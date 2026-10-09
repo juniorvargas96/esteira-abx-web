@@ -1,1 +1,1 @@
-import "./globals.css"; export const metadata={title:"Esteira ABX-ON",description:"Sistema interno de esteira"}; export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="pt-BR"><body>{children}</body></html>}
+import "./globals.css"; export const metadata={title:"Esteira ON",description:"Sistema interno de esteira de anúncios"}; export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="pt-BR"><body>{children}</body></html>}
