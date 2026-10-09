@@ -4,5 +4,3 @@ node_modules/
 .env.*
 !.env.example
 *.tsbuildinfo
-.DS_Store
-ESTEIRA_ON_WEB_V0_6_21/
