@@ -57,3 +57,6 @@
 .logout{grid-column:1/-1;margin-top:16px;padding:12px;border:1px solid #b42b28;border-radius:10px;font-size:12px;background:rgba(0,0,0,.16)}
 .logout:hover{background:#821218}
 @media(max-width:950px){.sidebar{display:flex;padding:18px;gap:14px}.shell{grid-template-columns:1fr}.brand{padding-bottom:0}.nav{display:flex;flex-wrap:wrap}.user{margin-top:0}.main{padding:22px}}
+
+/* Foto de perfil individual — V0.6.21 */
+.avatarButton{position:relative;overflow:hidden;padding:0;cursor:pointer;border:1px solid #d99a55}.avatarButton img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2}.avatarButton:hover{outline:2px solid #f7b944}.avatarFallback{position:relative;z-index:1}.photoControls{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px;margin-top:9px}.photoControls button{background:none;border:0;padding:2px 0;color:#f3c27b;font-size:11px;cursor:pointer}.photoControls button:hover{text-decoration:underline}.photoControls span{color:#ffd3d3;font-size:11px;width:100%}
