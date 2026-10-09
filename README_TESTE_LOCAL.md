@@ -1,15 +1,11 @@
-# ESTEIRA ON V0.6.19 — Teste local
+# ESTEIRA ON WEB V0.6.20 — Teste local
 
-Base: projeto V0.6.16 enviado pelo usuário. Visual: prévia local aprovada.
-
-1. Extraia este ZIP numa pasta nova.
+1. Extraia o ZIP em uma pasta nova.
 2. Abra o PowerShell nessa pasta.
-3. Execute `npm.cmd install` e depois `npm.cmd run dev`.
-4. Acesse http://localhost:3000/login.
-5. Entre com o mesmo usuário e senha do sistema original.
+3. Execute `npm.cmd install` e `npm.cmd run dev`.
+4. Abra http://localhost:3000/login e entre normalmente.
+5. Confira o menu em /trabalhos e o favicon na aba.
 
-O layout de login usa o mesmo degradê, logo e proporções da prévia local. O aviso de demonstração foi retirado e o formulário continua chamando `/api/auth/login`.
+A tela de login permanece como na V0.6.19. O menu recebeu nova identidade visual. As referências ABX nos anúncios e contas não foram alteradas.
 
-**Atenção:** o login real requer as mesmas variáveis de ambiente e acesso ao banco configurados no projeto original. Este pacote não inclui credenciais nem arquivo `.env`.
-
-Não foi publicado na Vercel. Validar login, menu e rotas antes de publicar.
+Para login local, o projeto precisa de variáveis de ambiente válidas para acessar o banco online. Não envie credenciais ao GitHub. Não publique antes de testar.
