@@ -1,4 +1,4 @@
-export const etapas=["BASE","FOTO","DIMENSÕES","VÍDEO","CRIAR ANÚNCIO","PROMOÇÃO","ADS"];
+export const etapas=["BASE","FOTO","DIMENSÕES","PREÇOS","CRIAR ANÚNCIO","PROMOÇÃO","ADS","VÍDEO"];
 export const contagens=[12,8,6,4,9,3,5];
 export const trabalhos=[
  {sku:"SKU-10452",canal:"MERCADO LIVRE — ABX",titulo:"Produto aguardando conferência da etapa",prioridade:"URGENTE",tempo:"18 min"},

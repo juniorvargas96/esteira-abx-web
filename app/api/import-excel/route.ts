@@ -1,5 +1,5 @@
 import {NextResponse} from 'next/server';import {currentUser} from '@/lib/auth';import {db} from '@/lib/db';import * as XLSX from 'xlsx';
-const ETAPAS=['BASE','FOTO','DIMENSÕES','CRIAR ANÚNCIO','PROMOÇÃO','ADS','VÍDEO'];const PRIORIDADES=['NORMAL','PRIORIDADE','URGENTE'];const now=()=>new Date().toISOString().slice(0,19);
+const ETAPAS=['BASE','FOTO','DIMENSÕES','PREÇOS','CRIAR ANÚNCIO','PROMOÇÃO','ADS','VÍDEO'];const PRIORIDADES=['NORMAL','PRIORIDADE','URGENTE'];const now=()=>new Date().toISOString().slice(0,19);
 const norm=(v:any)=>String(v??'').trim();
 const etapaCanon=(v:any)=>{const x=norm(v).toUpperCase();const aliases:Record<string,string>={'VIDEO':'VÍDEO','CRIAR ANUNCIO':'CRIAR ANÚNCIO','PROMOCAO':'PROMOÇÃO','DIMENSOES':'DIMENSÕES'};return aliases[x]||x};
 function dateText(v:any){if(!v)return'';if(v instanceof Date)return v.toISOString().slice(0,10);if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);return d?`${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`:''}const s=norm(v);if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)){const[a,b,c]=s.split('/');return `${c}-${b}-${a}`}return s}

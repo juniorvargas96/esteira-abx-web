@@ -2,7 +2,7 @@ import {NextResponse} from 'next/server';
 import {currentUser} from '@/lib/auth';
 import {db} from '@/lib/db';
 
-const ETAPAS=['BASE','FOTO','DIMENSÕES','CRIAR ANÚNCIO','PROMOÇÃO','ADS','VÍDEO'];
+const ETAPAS=['BASE','FOTO','DIMENSÕES','PREÇOS','CRIAR ANÚNCIO','PROMOÇÃO','ADS','VÍDEO'];
 const CANAIS=['MERCADO LIVRE — ABX','MERCADO LIVRE — RWX','MERCADO LIVRE — DANFERX','SHOPEE — ABX','SHOPEE — RWX','SHOPEE — DANFERX','TIKTOK SHOP — ABX'];
 const now=()=>new Date().toISOString().slice(0,19);
 

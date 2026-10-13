@@ -1,6 +1,6 @@
 "use client";
 import Shell from "@/components/Shell"; import {useEffect,useMemo,useState} from "react";
-const etapas=['BASE','FOTO','DIMENSÕES','CRIAR ANÚNCIO','PROMOÇÃO','ADS','VÍDEO'];
+const etapas=['BASE','FOTO','DIMENSÕES','PREÇOS','CRIAR ANÚNCIO','PROMOÇÃO','ADS','VÍDEO'];
 type T={id:number;sku:string;canal:string;etapa:string;status:string;responsavel?:string;entrada_etapa_em?:string;inicio_etapa_em?:string;prioridade:string;correcao_motivo?:string;tipo_origem?:string;observacao_atualizacao?:string};
 type P={id:number;nome:string;perfil:string;etapas:string;concluidos:number;correcoes:number};
 type D={metricas:{entraram:number;finalizados:number;correcoes:number};counts:Record<string,number>;trabalhos:T[];responsaveis:Record<string,string[]>;produtividade:P[];periodo:{inicio:string;fim:string}};
