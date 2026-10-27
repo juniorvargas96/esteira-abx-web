@@ -41,43 +41,56 @@ export async function POST(req:Request){
                   ON CONFLICT (sku) DO NOTHING`,[sku,t,etapa==='BASE'?desc:'']);
    if(etapa==='BASE')await c.query('UPDATE produtos SET descricao=$1 WHERE sku=$2',[desc,sku]);
 
+   // Serializa solicitações concorrentes do mesmo SKU para evitar duplicatas e números repetidos.
+   await c.query('SELECT pg_advisory_xact_lock(hashtext($1))',[sku]);
    const nr=await c.query('SELECT COALESCE(MAX(numero),0)::int n FROM anuncios WHERE sku=$1',[sku]);
    let numero=nr.rows[0].n;
-   let atualizados=0,criados=0;
+   let criados=0;
 
+   // Não sobrescreve a etapa de anúncios existentes: cada solicitação recebe um ID próprio.
    for(const canal of canais){
-    let anuncio=await c.query('SELECT id FROM anuncios WHERE sku=$1 AND canal=$2 ORDER BY id DESC LIMIT 1',[sku,canal]);
-    let id:number;
-    if(anuncio.rowCount){
-     id=anuncio.rows[0].id;
-     atualizados++;
-    }else{
-     numero++;
-     const tituloInicial=etapa==='BASE'?(canal.startsWith('MERCADO LIVRE')?ml[0]:canal.startsWith('SHOPEE')?sh:tk):'';
-     const r=await c.query(`INSERT INTO anuncios(sku,numero,titulo,descricao,canal,etapa,status,criado_em,atualizado_em,entrada_etapa_em,prioridade,prazo)
-       VALUES($1,$2,$3,$4,$5,$6,'CORRIGIR',$7,$7,$7,$8,$9) RETURNING id`,
-       [sku,numero,tituloInicial,etapa==='BASE'?desc:'',canal,etapa,t,b.prioridade||'NORMAL',b.prazo||null]);
-     id=r.rows[0].id;
-     criados++;
+    const duplicado=await c.query(`SELECT id FROM anuncios
+      WHERE sku=$1 AND canal=$2 AND etapa=$3 AND tipo_origem='ATUALIZAÇÃO'
+        AND status<>'OK' LIMIT 1`,[sku,canal,etapa]);
+    if(duplicado.rowCount){
+     throw new Error(`DUPLICADO:Já existe uma atualização de ${etapa} em aberto para ${sku} na plataforma ${canal}.`);
     }
 
+    const anterior=await c.query(`SELECT * FROM anuncios WHERE sku=$1 AND canal=$2
+      ORDER BY CASE WHEN tipo_origem='NOVO' THEN 0 ELSE 1 END, id DESC LIMIT 1`,[sku,canal]);
+    const base=anterior.rows[0];
+    numero++;
+    const tits=etapa==='BASE'?(canal.startsWith('MERCADO LIVRE')?ml:canal.startsWith('SHOPEE')?[sh]:[tk]):[];
+    const tituloInicial=tits[0]||base?.titulo||'';
+    const descricaoInicial=etapa==='BASE'?desc:base?.descricao||'';
+    const r=await c.query(`INSERT INTO anuncios
+      (sku,numero,titulo,descricao,canal,etapa,status,criado_em,atualizado_em,
+       entrada_etapa_em,prioridade,prazo,tipo_origem,observacao_atualizacao,
+       preco,preco_premium,preco_classico,preco_shopee,preco_tiktok,
+       link_anuncio,link_video)
+      VALUES($1,$2,$3,$4,$5,$6,'AGUARDANDO',$7,$7,$7,$8,$9,'ATUALIZAÇÃO',$10,
+       $11,$12,$13,$14,$15,$16,$17) RETURNING id`,
+      [sku,numero,tituloInicial,descricaoInicial,canal,etapa,t,
+       b.prioridade||'NORMAL',b.prazo||null,obs||null,
+       base?.preco??null,base?.preco_premium??null,base?.preco_classico??null,
+       base?.preco_shopee??null,base?.preco_tiktok??null,
+       base?.link_anuncio??null,base?.link_video??null]);
+    const id=r.rows[0].id;
     if(etapa==='BASE'){
-     const tits=canal.startsWith('MERCADO LIVRE')?ml:canal.startsWith('SHOPEE')?[sh]:[tk];
-     await c.query('DELETE FROM anuncio_titulos WHERE anuncio_id=$1',[id]);
-     for(let i=0;i<tits.length;i++)await c.query('INSERT INTO anuncio_titulos(anuncio_id,ordem,titulo) VALUES($1,$2,$3)',[id,i+1,tits[i]]);
-     await c.query('UPDATE anuncios SET titulo=$1,descricao=$2 WHERE id=$3',[tits[0],desc,id]);
+     for(let i=0;i<tits.length;i++)await c.query(
+      'INSERT INTO anuncio_titulos(anuncio_id,ordem,titulo) VALUES($1,$2,$3)',
+      [id,i+1,tits[i]]);
+    }else if(base){
+     await c.query(`INSERT INTO anuncio_titulos(anuncio_id,ordem,titulo)
+       SELECT $1,ordem,titulo FROM anuncio_titulos WHERE anuncio_id=$2`,[id,base.id]);
     }
-
-    await c.query(`UPDATE anuncios SET etapa=$1,status='AGUARDANDO',responsavel=NULL,entrada_etapa_em=$2,inicio_etapa_em=NULL,
-      atualizado_em=$2,prioridade=$3,prazo=$4,correcao_origem=NULL,correcao_destino=NULL,
-      correcao_retorno=NULL,correcao_motivo=NULL,tipo_origem='ATUALIZAÇÃO',observacao_atualizacao=$5 WHERE id=$6`,
-      [etapa,t,b.prioridade||'NORMAL',b.prazo||null,obs||null,id]);
     await c.query('INSERT INTO historico(anuncio_id,data_hora,etapa,acao,observacao) VALUES($1,$2,$3,$4,$5)',
       [id,t,etapa,'ATUALIZAÇÃO SOLICITADA',`${u.nome} | ${canal}${obs?`: ${obs}`:''}`]);
+    criados++;
    }
 
    await c.query('COMMIT');
-   return NextResponse.json({ok:true,atualizados:canais.length,existentes:atualizados,novos:criados});
+   return NextResponse.json({ok:true,atualizados:criados,existentes:0,novos:criados});
   }catch(e){await c.query('ROLLBACK');throw e}finally{c.release()}
- }catch(e){console.error(e);return NextResponse.json({error:'Falha ao enviar anúncio para atualização.'},{status:500})}
+ }catch(e:any){if(String(e?.message||'').startsWith('DUPLICADO:'))return NextResponse.json({error:String(e.message).slice(10)},{status:409});console.error(e);return NextResponse.json({error:'Falha ao enviar anúncio para atualização.'},{status:500})}
 }
