@@ -1,0 +1,2 @@
+import {NextResponse} from 'next/server'; import {currentUser} from '@/lib/auth'; import {db} from '@/lib/db';
+export async function GET(){try{const u=await currentUser();if(!u)return NextResponse.json({error:'Não autenticado'},{status:401});const {rows}=await db().query('SELECT etapa FROM usuario_etapas WHERE usuario_id=$1 ORDER BY etapa',[u.id]);return NextResponse.json({...u,etapas:rows.map(x=>x.etapa)})}catch(e){console.error(e);return NextResponse.json({error:'Falha no banco'},{status:500})}}

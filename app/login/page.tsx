@@ -1,0 +1,9 @@
+"use client";
+import Image from "next/image";
+import {useState} from "react";
+import {useRouter} from "next/navigation";
+export default function Login(){
+ const router=useRouter(); const [login,setLogin]=useState("");const [senha,setSenha]=useState("");const [erro,setErro]=useState("");const [busy,setBusy]=useState(false);
+ const entrar=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();setBusy(true);setErro("");try{const res=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({login,senha})});const d=await res.json();if(!res.ok){setErro(d.error||"Falha no login");return;}router.replace("/trabalhos");}catch{setErro("Não foi possível conectar ao servidor.");}finally{setBusy(false);}};
+ return <div className="onLogin"><section className="onHero"><div className="onHeroContent"><Image className="onLogo" src="/logo-esteira-on.png" alt="Esteira ON" width={1983} height={793} priority unoptimized/><h1>Seu fluxo de anúncios começa aqui.</h1><p>Organize, acompanhe e conclua cada etapa dos seus anúncios de forma simples e eficiente.</p></div></section><section className="onSide"><div className="onSideContent"><form className="onCard" onSubmit={entrar}><h2>Entrar no sistema</h2><label className="onField">Usuário<input autoComplete="username" value={login} onChange={e=>setLogin(e.target.value)} required placeholder="Seu usuário"/></label><label className="onField">Senha<input type="password" autoComplete="current-password" value={senha} onChange={e=>setSenha(e.target.value)} required placeholder="Sua senha"/></label>{erro&&<p className="onError" role="alert">{erro}</p>}<button className="onButton" disabled={busy} type="submit">{busy?"Acessando...":"Acessar"}</button></form><div className="onFoot">© 2026 Esteira ON</div></div></section></div>
+}
