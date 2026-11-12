@@ -60,3 +60,11 @@
 
 /* Foto de perfil individual — V0.6.21 */
 .avatarButton{position:relative;overflow:hidden;padding:0;cursor:pointer;border:1px solid #d99a55}.avatarButton img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2}.avatarButton:hover{outline:2px solid #f7b944}.avatarFallback{position:relative;z-index:1}.photoControls{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px;margin-top:9px}.photoControls button{background:none;border:0;padding:2px 0;color:#f3c27b;font-size:11px;cursor:pointer}.photoControls button:hover{text-decoration:underline}.photoControls span{color:#ffd3d3;font-size:11px;width:100%}
+
+/* V0.6.35 - detalhamento da produtividade por executor */
+.produtividadeDetalhe{margin-top:12px;padding-top:10px;border-top:1px solid #e5e7eb;font-size:13px}
+.produtividadeDetalhe summary{cursor:pointer;font-weight:700;color:#334155;list-style:revert}
+.produtividadeLinhas{margin-top:10px;display:grid;gap:8px}
+.produtividadeLinha{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.produtividadeLinha span:last-child{text-align:right;color:#475569}
+.produtividadeNota{display:block;margin-top:10px;color:#64748b;font-size:11px;line-height:1.5}
