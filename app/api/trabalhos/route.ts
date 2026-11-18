@@ -15,7 +15,11 @@ export async function GET(req:Request){const u=await currentUser();if(!u)return 
  return NextResponse.json({anuncio:record,titulos});
  }
  if(params.get('watch')==='1'){const wr=await q.query(`SELECT id,sku,canal,etapa,status,entrada_etapa_em FROM anuncios WHERE etapa=ANY($1::text[]) AND status!='OK' ORDER BY entrada_etapa_em`,[ets]);return NextResponse.json({items:wr.rows})}if(params.get('history')==='1'){
- const days=Math.max(1,Math.min(365,Number(params.get('days')||30)));
+ const validDate=(v:string)=>/^\d{4}-\d{2}-\d{2}$/.test(v)&&!Number.isNaN(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v;
+ const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const fim=String(params.get('fim')||today);
+ const inicio=String(params.get('inicio')||fim);
+ if(!validDate(inicio)||!validDate(fim)||inicio>fim)return NextResponse.json({error:'Período inválido. Confira as datas De e Até.'},{status:400});
  const manager=canManage(u);
  const requestedUser=manager?String(params.get('usuario')||'TODOS'):'PROPRIO';
  const users=manager?(await q.query('SELECT id,nome FROM usuarios WHERE ativo=1 ORDER BY nome')).rows:[];
@@ -24,11 +28,11 @@ export async function GET(req:Request){const u=await currentUser();if(!u)return 
  const who=manager?(selected?.nome||null):u.nome;
  const hr=await q.query(`SELECT h.id,h.anuncio_id,h.data_hora,h.etapa,h.acao,h.observacao,a.sku,a.canal,a.tipo_origem,a.codigo_pai,a.quantidade_filhos,h.codigos_contabilizados,h.codigo_pai_conclusao
  FROM historico h JOIN anuncios a ON a.id=h.anuncio_id
- WHERE (h.data_hora::timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')::date >= ((CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date - ($1::int - 1))
+ WHERE (h.data_hora::timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')::date BETWEEN $1::date AND $4::date
  AND h.etapa=ANY($2::text[])
  AND ($3::text IS NULL OR h.observacao=$3 OR (h.acao='CORREÇÃO SOLICITADA' AND h.observacao LIKE ($3 || ' → %')))
- ORDER BY h.data_hora DESC LIMIT 3000`,[days,ets,who]);
- return NextResponse.json({history:hr.rows,days,users,canViewTeam:manager});
+ ORDER BY h.data_hora DESC LIMIT 3000`,[inicio,ets,who,fim]);
+ return NextResponse.json({history:hr.rows,inicio,fim,users,canViewTeam:manager});
  }const rows=await q.query(`SELECT a.*,p.altura,p.largura,p.comprimento,p.peso,p.descricao produto_descricao,p.video_padrao FROM anuncios a LEFT JOIN produtos p ON p.sku=a.sku WHERE a.etapa=$1 AND a.status!='OK' ORDER BY CASE UPPER(COALESCE(a.prioridade,'NORMAL')) WHEN 'URGENTE' THEN 0 WHEN 'PRIORIDADE' THEN 1 ELSE 2 END, NULLIF(a.entrada_etapa_em,'') ASC NULLS LAST, a.id ASC`,[etapa]);const ids=rows.rows.map(x=>x.id);let tits:any[]=[];if(ids.length)tits=(await q.query('SELECT anuncio_id,ordem,titulo FROM anuncio_titulos WHERE anuncio_id=ANY($1::bigint[]) ORDER BY anuncio_id,ordem',[ids])).rows;const hoje=hojeBrasil();const feitos=await q.query(`WITH registros AS (SELECT h.*,a.sku FROM historico h JOIN anuncios a ON a.id=h.anuncio_id WHERE h.acao='ETAPA CONCLUÍDA' AND h.etapa=$1 AND (h.data_hora::timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')::date=$2::date), unicos AS (SELECT sku,MAX(GREATEST(1,COALESCE(codigos_contabilizados,1))) codigos FROM registros GROUP BY sku) SELECT (SELECT COUNT(*)::int FROM registros) n,COALESCE((SELECT SUM(codigos)::int FROM unicos),0) codigos`,[etapa,hoje]);
 // Cada executor recebe os códigos únicos que efetivamente concluiu nesta etapa.
 // O total da etapa continua deduplicado por SKU, inclusive quando executores diferentes atuam nele.
